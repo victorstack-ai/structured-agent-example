@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-selfcheck.json
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
