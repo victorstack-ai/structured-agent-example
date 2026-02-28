@@ -1,0 +1,5 @@
+# Core dependencies
+anthropic>=0.39.0    # Anthropic Claude API client (for real_llm_service.py)
+
+# Testing
+pytest>=7.0.0        # Test runner

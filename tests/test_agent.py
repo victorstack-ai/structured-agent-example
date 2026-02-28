@@ -64,13 +64,60 @@ class TestSentimentAgent(unittest.TestCase):
         """Tests that the agent handles exceptions from the LLM service gracefully."""
         # Configure the mock to raise an exception
         mock_get_sentiment.side_effect = Exception("API connection failed")
-        
+
         agent = SentimentAgent(self.config)
         text = "Some input."
         result = agent.run(text)
-        
+
         self.assertEqual(result["status"], "error")
         self.assertIn("An unexpected error occurred", result["message"])
+
+    # --- Additional edge-case tests ---
+
+    @patch('structured_agent_example.llm_service.get_sentiment')
+    def test_run_neutral_sentiment(self, mock_get_sentiment):
+        """Tests the agent correctly returns neutral sentiment."""
+        mock_get_sentiment.return_value = "neutral"
+
+        agent = SentimentAgent(self.config)
+        text = "The meeting is scheduled for 3pm."
+        result = agent.run(text)
+
+        mock_get_sentiment.assert_called_once_with(text, model="test-model-v1")
+        self.assertEqual(result["status"], "success")
+        self.assertEqual(result["sentiment"], "neutral")
+        self.assertEqual(result["input"], text)
+
+    def test_run_none_input(self):
+        """Tests that the agent returns an error when input is None."""
+        agent = SentimentAgent(self.config)
+        result = agent.run(None)
+
+        self.assertEqual(result["status"], "error")
+        self.assertIn("Invalid text input", result["message"])
+        self.assertIsNone(result["sentiment"])
+
+    def test_run_non_string_input(self):
+        """Tests that the agent returns an error when input is not a string (e.g., int)."""
+        agent = SentimentAgent(self.config)
+        result = agent.run(12345)
+
+        self.assertEqual(result["status"], "error")
+        self.assertIn("Invalid text input", result["message"])
+        self.assertIsNone(result["sentiment"])
+
+    @patch('structured_agent_example.llm_service.get_sentiment')
+    def test_run_preserves_original_input(self, mock_get_sentiment):
+        """Tests that the response includes the exact original input text."""
+        mock_get_sentiment.return_value = "positive"
+
+        agent = SentimentAgent(self.config)
+        text = "  Whitespace around great text  "
+        result = agent.run(text)
+
+        # The agent should preserve the original input exactly as provided
+        self.assertEqual(result["input"], text)
+        self.assertEqual(result["input"], "  Whitespace around great text  ")
 
 if __name__ == '__main__':
     unittest.main()
